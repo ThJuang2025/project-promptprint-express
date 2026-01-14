@@ -101,11 +101,16 @@ app.post("/api/login", async (req, res) => {
       { expiresIn: "1d" }
     );
 
+    // Update lastLogin
+    user.lastLogin = new Date();
+    await user.save();
+
     res.json({
       token,
       userId: user._id,
       username: user.username,
       role: user.role,
+      lastLogin: user.lastLogin,
     });
   } catch (error) {
     console.error("Login Error:", error);
