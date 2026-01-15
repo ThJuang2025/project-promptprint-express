@@ -174,6 +174,30 @@ app.post("/admin/products", upload.single("image"), async (req, res) => {
   }
 });
 
+// Standalone Image Upload Route
+app.post("/api/upload", upload.single("image"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No image file provided" });
+    }
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "promptprint-products",
+      format: "webp",
+    });
+    // Remove local file
+    try {
+      fs.unlinkSync(req.file.path);
+    } catch (err) {
+      console.error("Error deleting local file:", err);
+    }
+
+    res.json({ imageUrl: result.secure_url });
+  } catch (error) {
+    console.error("Upload Error:", error);
+    res.status(500).json({ error: "Image upload failed" });
+  }
+});
+
 // Update Product
 app.put("/admin/products/:id", upload.single("image"), async (req, res) => {
   try {
@@ -277,6 +301,27 @@ app.put("/admin/orders/:id/status", async (req, res) => {
   } catch (error) {
     console.error("Update Order Status Error:", error);
     res.status(500).json({ error: "Failed to update order status" });
+  }
+});
+
+// 8. User Management (Admin)
+app.get("/api/users", async (req, res) => {
+  try {
+    const users = await User.find({}, "-password").sort({ createdAt: -1 });
+    res.json(users);
+  } catch (error) {
+    console.error("Fetch Users Error:", error);
+    res.status(500).json({ error: "Error fetching users" });
+  }
+});
+
+app.delete("/api/users/:id", async (req, res) => {
+  try {
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Delete User Error:", error);
+    res.status(500).json({ error: "Error deleting user" });
   }
 });
 
@@ -395,8 +440,17 @@ app.post("/api/generate-design", async (req, res) => {
       designId: newDesign ? newDesign._id : null,
     });
   } catch (error) {
-    console.error("❌ AI Generation Error:", error);
-    res.status(500).json({ error: "Failed to generate design" });
+    console.error("❌ AI Generation Error Details:");
+    console.error("- Message:", error.message);
+    if (error.response) {
+      console.error("- Response Status:", error.response.status);
+      console.error("- Response Data:", error.response.data);
+    }
+    console.error("- Stack:", error.stack);
+    res.status(500).json({
+      error: "Failed to generate design",
+      details: error.message,
+    });
   }
 });
 
