@@ -372,7 +372,7 @@ app.post("/api/generate-design", async (req, res) => {
     console.log("☁️ Uploading to Cloudinary...");
     const uploadResult = await cloudinary.uploader.upload(pollinationsUrl, {
       folder: "promptprint-designs",
-      format: "png",
+      format: "webp",
     });
 
     // 4. Save to MongoDB
@@ -437,7 +437,7 @@ app.post("/api/remove-background", async (req, res) => {
     console.log("☁️ Uploading transparent image to Cloudinary...");
     const uploadResult = await cloudinary.uploader.upload(transparencyDataUrl, {
       folder: "promptprint-designs",
-      format: "png",
+      format: "webp",
     });
 
     console.log("✅ Manual BG Removal Success:", uploadResult.secure_url);
