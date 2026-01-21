@@ -84,7 +84,7 @@ if (!fs.existsSync("uploads")) {
 // --- Routes ---
 
 // 1. Register
-app.post("/register", async (req, res) => {
+app.post("/api/register", async (req, res) => {
   try {
     const { username, password, email } = req.body;
     const existingUser = await User.findOne({ username });
@@ -101,10 +101,22 @@ app.post("/register", async (req, res) => {
 });
 
 // 2. Login
-app.post("/login", async (req, res) => {
+app.post("/api/login", async (req, res) => {
   try {
-    const { username, password } = req.body;
-    const user = await User.findOne({ username });
+    const { username, email, password } = req.body;
+
+    // Check if identifier is provided (can be username or email)
+    const identifier = username || email;
+
+    if (!identifier) {
+      return res.status(400).json({ error: "Username or Email is required" });
+    }
+
+    // Find user by either username or email
+    const user = await User.findOne({
+      $or: [{ username: identifier }, { email: identifier }],
+    });
+
     if (!user) return res.status(400).json({ error: "User not found" });
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -115,6 +127,7 @@ app.post("/login", async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
+
     res.json({
       token,
       username: user.username,

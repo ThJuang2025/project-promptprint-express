@@ -6,9 +6,8 @@ const designSchema = new mongoose.Schema({
     required: true,
   },
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    // required: true // Optional for now, to allow guest generation if needed
+    type: String, // Changed to String to support external auth provider IDs
+    // required: true
   },
   enhancedPrompt: {
     type: String,
